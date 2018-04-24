@@ -2,17 +2,17 @@
 from utils import *
 
 def diagonal(x,y):
-    diagonal_units = []
-    diagonal_units2 = []
+    diag_units = []
+    diag_units2 = []
     diagonal_list = []
     x_reverse = x[::-1]
-    if(len(x) == len(y)):
+    if len(x) == len(y):
         for count in range(0,len(x)):
-            diagonal_units.append(x[count]+y[count])
-        diagonal_list.append(diagonal_units)
+            diag_units.append(x[count]+y[count])
+        diagonal_list.append(diag_units)
         for count in range(0,len(y)):
-            diagonal_units2.append(x_reverse[count]+y[count])
-        diagonal_list.append(diagonal_units2)
+            diag_units2.append(x_reverse[count]+y[count])
+        diagonal_list.append(diag_units2)
     return diagonal_list
 
 diagonal_units = diagonal(rows,cols)
@@ -23,10 +23,6 @@ square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','45
 diagonal_units = diagonal(rows,cols)
 
 unitlist = row_units + column_units + square_units + diagonal_units
-
-# TODO: Update the unit list to add the new diagonal units
-# unitlist = unitlist + diagonal_units
-
 
 # Must be called after all units (including diagonals) are added to the unitlist
 units = extract_units(unitlist, boxes)
@@ -66,7 +62,7 @@ def naked_twins(values):
 
     possible_twins = [box for box in values.keys() if len(values[box]) == 2]
     twin_matches = [[box1,box2] for box1 in possible_twins for box2 in peers[box1] \
-    if set(values[box1])==set(values[box2]) ]
+    if set(values[box1]) == set(values[box2])]
     
     #print("twin matches", twin_matches)
     peersList = []
@@ -77,15 +73,22 @@ def naked_twins(values):
         peers1 = set(peers[box1])
         peers2 = set(peers[box2])
         peers_int = peers1 & peers2
-        print("peers_int")
-        print(peers_int)
+        # print("peers_int")
+        # print(peers_int)
         peersList.append(peers_int)
-    # Remove twin from the peers
-    for individualPeerInts in peersList:
-        for peer_val in values(individualPeerInts[i]):
-            if len(values[peer_val])>2:
-                for rm_val in values[box1]:
-                    values = assign_value(values, peer_val, values[peer_val].replace(rm_val,''))
+        # print("peersList")
+        # print(peersList)
+        # Remove twin from the peers
+        # I think I'm removing too much from the board. Remember to exclude the boxes that the twins exist in
+        for individualPeerSets in peersList:
+            # print("individualPeerInts\r")
+            # print(individualPeerInts)
+            for peer_val in individualPeerSets:
+                print("peer_val")
+                print(peer_val)
+                if len(values[peer_val]) > 2:
+                    for rm_val in values[box1]:
+                        values = assign_value(values, peer_val, values[peer_val].replace(rm_val, ''))
 
     # OLD WORKING CODE EXCEPT PARTIALLY FAILING
     # for i in range(len(twin_matches)):
@@ -101,7 +104,9 @@ def naked_twins(values):
     #             for rm_val in values[box1]:
     #                 values = assign_value(values, peer_val, values[peer_val].replace(rm_val,''))
     #print("post naked twin removal")
-    #display(values)    
+    #display(values)
+    print("values\r")
+    print(display(values))
     return values    
 
 def eliminate(values):
@@ -243,9 +248,10 @@ def solve(grid):
 
 if __name__ == "__main__":
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-    display(grid2values(diag_sudoku_grid))
+    # display(grid2values(diag_sudoku_grid))
     result = solve(diag_sudoku_grid)
-    display(result)
+    # display(result)
+    naked_twins(grid2values(diag_sudoku_grid))
 
     try:
         import PySudoku
