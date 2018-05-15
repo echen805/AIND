@@ -41,7 +41,7 @@ def create_expressions(str_list):
     return [expr(s) for s in str_list]
 
 
-def make_relations(name, *args, key=lambda x: True):
+def make_relations(name: object, args: object, key: object = lambda x: True) -> object:
     """ Map the arguments to expressions. the first positional arg is used as the expression name
     and all remaining expressions are used as arguments.
 

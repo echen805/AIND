@@ -16,7 +16,16 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        raise NotImplementedError
+
+        for effectA in actionA.effects:
+            for effectB in actionB.preconditions:
+                if effectA == effectB:
+                    return True
+        for effectB in actionB.effects:
+            for effectA in actionA.preconditions:
+                if effectB == effectA:
+                    return True
+        return False
 
 
     def _interference(self, actionA, actionB):
@@ -27,7 +36,8 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        raise NotImplementedError
+        # for effectA in actionA.effects:
+        #     effectA ==
 
     def _competing_needs(self, actionA, actionB):
         """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
@@ -38,7 +48,12 @@ class ActionLayer(BaseActionLayer):
         layers.BaseLayer.parent_layer
         """
         # TODO: implement this function
-        raise NotImplementedError
+        print("\n*** {}".format(self.parents))
+        for actA in actionA.parent_layer:
+            for actB in actionB.parent_layer:
+                if actA.is_mutex(actB):
+                    return True
+        return False
 
 
 class LiteralLayer(BaseLiteralLayer):
@@ -50,13 +65,14 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
-        # TODO: implement this function
-        raise NotImplementedError
+        # need to make sure that literalA precondition positive != literal B precondition positive
+        # maybe parent layer too? 
+
 
     def _negation(self, literalA, literalB):
         """ Return True if two literals are negations of each other """
         # TODO: implement this function
-        raise NotImplementedError
+        return (literalA)
 
 
 class PlanningGraph:
