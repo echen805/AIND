@@ -18,12 +18,12 @@ class ActionLayer(BaseActionLayer):
         # TODO: implement this function
 
         for effectA in actionA.effects:
-            for effectB in actionB.preconditions:
-                if effectA == effectB:
+            for effectB in actionB.effects:
+                if effectA == ~effectB:
                     return True
         for effectB in actionB.effects:
-            for effectA in actionA.preconditions:
-                if effectB == effectA:
+            for effectA in actionA.effects:
+                if effectB == ~effectA:
                     return True
         return False
 
@@ -48,10 +48,9 @@ class ActionLayer(BaseActionLayer):
         layers.BaseLayer.parent_layer
         """
         # TODO: implement this function
-        print("\n*** {}".format(self.parents))
-        for actA in actionA.parent_layer:
-            for actB in actionB.parent_layer:
-                if actA.is_mutex(actB):
+        for precondA in actionA.preconditions:
+            for precondB in actionB.preconditions:
+                if self.parent_layer.is_mutex(precondA,precondB):
                     return True
         return False
 
@@ -66,13 +65,14 @@ class LiteralLayer(BaseLiteralLayer):
         layers.BaseLayer.parent_layer
         """
         # need to make sure that literalA precondition positive != literal B precondition positive
-        # maybe parent layer too? 
+        # maybe parent layer too?
+        # for precondA in literalA.parent_layer.children.items():
 
 
     def _negation(self, literalA, literalB):
         """ Return True if two literals are negations of each other """
         # TODO: implement this function
-        return (literalA)
+        return literalA == ~literalB
 
 
 class PlanningGraph:
