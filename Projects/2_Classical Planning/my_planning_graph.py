@@ -71,7 +71,17 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
-        # for precondA in literalA.parent_layer.children.items():
+        allLiteralA = []
+        allLiteralB = []
+        for literals in self.parent_layer.children.items():
+            if literalA == literals:
+                allLiteralA.append(literals)
+            if literalB == literals:
+                allLiteralB.append(literalB)
+        for litA in allLiteralA:
+            for litB in allLiteralB:
+                if not self.parent_layer.is_mutex(litA, litB):
+                    return False
         return True
 
     def _negation(self, literalA, literalB):
