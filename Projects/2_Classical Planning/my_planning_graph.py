@@ -71,13 +71,20 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
+        # Go through all the layers and collect all the literals for A and B
         allLiteralA = []
         allLiteralB = []
-        for literals in self.parent_layer.children.items():
-            if literalA == literals:
-                allLiteralA.append(literals)
-            if literalB == literals:
-                allLiteralB.append(literalB)
+        print("items: ", self.parent_layer.children.items())
+        # print("literalA: {} and literalB: {}".format(literalA, literalB))
+        # Since the layers are a dictionary, need to split it up as key/value to better parse. A layer consist of a fluent and an action
+        for action, fluents in self.parent_layer.children.items():
+            # print("these are the fluents:", fluents)
+            # print("these are the actions:", action)
+            if literalA in fluents:
+                allLiteralA.append(action)
+            if literalB in fluents:
+                allLiteralB.append(action)
+        # print("allLiteralA:{} and allLiteralB:{}".format(allLiteralA, allLiteralB))
         for litA in allLiteralA:
             for litB in allLiteralB:
                 if not self.parent_layer.is_mutex(litA, litB):
