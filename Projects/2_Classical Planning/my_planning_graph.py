@@ -36,8 +36,15 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        # for effectA in actionA.effects:
-        #     effectA ==
+        for effectA in actionA.effects:
+            for precondB in actionB.preconditions:
+                if effectA == ~precondB:
+                    return True
+        for effectB in actionB.effects:
+            for precondA in actionA.preconditions:
+                if effectB == ~precondA:
+                    return True
+        return False
 
     def _competing_needs(self, actionA, actionB):
         """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
@@ -64,10 +71,8 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
-        # need to make sure that literalA precondition positive != literal B precondition positive
-        # maybe parent layer too?
         # for precondA in literalA.parent_layer.children.items():
-
+        return True
 
     def _negation(self, literalA, literalB):
         """ Return True if two literals are negations of each other """
@@ -136,7 +141,7 @@ class PlanningGraph:
         Russell-Norvig 10.3.1 (3rd Edition)
         """
         # TODO: implement this function
-        raise NotImplementedError
+        # raise NotImplementedError
 
     def h_maxlevel(self):
         """ Calculate the max level heuristic for the planning graph
@@ -166,7 +171,7 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic with A*
         """
         # TODO: implement maxlevel heuristic
-        raise NotImplementedError
+        # raise NotImplementedError
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
@@ -191,7 +196,7 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
         # TODO: implement setlevel heuristic
-        raise NotImplementedError
+        # raise NotImplementedError
 
     ##############################################################################
     #                     DO NOT MODIFY CODE BELOW THIS LINE                     #
