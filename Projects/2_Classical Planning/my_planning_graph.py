@@ -74,7 +74,7 @@ class LiteralLayer(BaseLiteralLayer):
         # Go through all the layers and collect all the literals for A and B
         allLiteralA = []
         allLiteralB = []
-        print("items: ", self.parent_layer.children.items())
+        # print("items: ", self.parent_layer.children.items())
         # print("literalA: {} and literalB: {}".format(literalA, literalB))
         # Since the layers are a dictionary, need to split it up as key/value to better parse. A layer consist of a fluent and an action
         for action, fluents in self.parent_layer.children.items():
@@ -132,6 +132,27 @@ class PlanningGraph:
         self.literal_layers = [layer]
         self.action_layers = []
 
+    def LevelCost(self, graph, goal):
+        """ Calculates the cost of a level. The level cost of a goal is equal to the level number of the first literal layer in the planning graph where the goal literal appears.
+
+        :param graph: PlanningGraph
+        :param goal: PlanningProblem.goal
+        :return: a value corresponding to the cost of the level
+
+        function LevelCost(graph, goal) returns a value
+         inputs:
+          graph, a leveled planning graph
+          goal, a literal that is a goal in the planning graph
+
+         for each layeri in graph.literalLayers do
+          if goal in layeri then return i
+        """
+        cost = 0
+        for literalLayer in graph.literal_layer:
+            if goal in literalLayer:
+                return cost
+            cost += 1
+
     def h_levelsum(self):
         """ Calculate the level sum heuristic for the planning graph
 
@@ -158,7 +179,7 @@ class PlanningGraph:
         Russell-Norvig 10.3.1 (3rd Edition)
         """
         # TODO: implement this function
-        # raise NotImplementedError
+
 
     def h_maxlevel(self):
         """ Calculate the max level heuristic for the planning graph
@@ -188,7 +209,12 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic with A*
         """
         # TODO: implement maxlevel heuristic
-        # raise NotImplementedError
+        print("goal: {}" .format().goal)
+        costs = []
+        graph = self.fill()
+        for goal in graph.goalLiterals:
+            costs.append(self.LevelCost(graph, goal))
+        return max(costs)
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
