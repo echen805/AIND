@@ -179,6 +179,18 @@ class PlanningGraph:
         Russell-Norvig 10.3.1 (3rd Edition)
         """
         # TODO: implement this function
+        i = 0
+        level_costs = []
+        costs = []
+        while not self._is_leveled:
+            allGoalsMet = True
+            for literal in self.literal_layers[-1]:  # literal_layers[-1] is the parent layer
+                if literal not in costs and literal in self.goal:
+                    costs.append(literal)
+                    level_costs.append(i)
+                    i += 1
+                self._extend()
+        return sum(level_costs)
 
 
     def h_maxlevel(self):
@@ -209,12 +221,19 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic with A*
         """
         # TODO: implement maxlevel heuristic
-        print("goal: {}" .format().goal)
+        i = 0
+        level_costs = []
         costs = []
-        graph = self.fill()
-        for goal in graph.goalLiterals:
-            costs.append(self.LevelCost(graph, goal))
-        return max(costs)
+        while not self._is_leveled:
+            allGoalsMet = True
+            for literal in self.literal_layers[-1]: #literal_layers[-1] is the parent layer
+                if literal not in costs and literal in self.goal:
+                    costs.append(literal)
+                    level_costs.append(i)
+                    i += 1
+                self._extend()
+        return max(level_costs)
+
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
@@ -239,7 +258,26 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
         # TODO: implement setlevel heuristic
-        # raise NotImplementedError
+        i = 0
+        while self._is_leveled:
+            for layer in self.literal_layers:
+                allGoalsMet = True
+                for goal in self.goal:
+                    if goal not in layer:
+                        allGoalsMet = False
+                if not allGoalsMet:
+                    break
+                goalsAreMutex = False
+                for goalA in self.goal:
+                    for goalB in self.goal:
+                        if layer.is_mutex(goalA, goalB) and goalA != goalB:
+                            goalsAreMutex = True
+                if goalsAreMutex == False:
+                    return i
+                else:
+                    self._extend()
+                    i += 1
+
 
     ##############################################################################
     #                     DO NOT MODIFY CODE BELOW THIS LINE                     #
