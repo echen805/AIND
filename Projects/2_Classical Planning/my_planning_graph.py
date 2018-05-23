@@ -179,18 +179,21 @@ class PlanningGraph:
         Russell-Norvig 10.3.1 (3rd Edition)
         """
         # TODO: implement this function
-        i = 0
-        level_costs = []
-        costs = []
-        while not self._is_leveled:
-            allGoalsMet = True
-            for literal in self.literal_layers[-1]:  # literal_layers[-1] is the parent layer
-                if literal not in costs and literal in self.goal:
-                    costs.append(literal)
-                    level_costs.append(i)
-                    i += 1
-                self._extend()
-        return sum(level_costs)
+        # i = 0
+        # level_costs = []
+        # costs = []
+        # while not self._is_leveled:
+        #     allGoalsMet = True
+        #     for literal in self.literal_layers[-1]:  # literal_layers[-1] is the parent layer
+        #         if literal not in costs and literal in self.goal:
+        #             costs.append(literal)
+        #             level_costs.append(i)
+        #             i += 1
+        #         self._extend()
+        # return sum(level_costs)
+
+        heu_level_sum = 0
+
 
 
     def h_maxlevel(self):
@@ -257,27 +260,21 @@ class PlanningGraph:
         -----
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
-        # TODO: implement setlevel heuristic
-        i = 0
-        while self._is_leveled:
-            for layer in self.literal_layers:
-                allGoalsMet = True
-                for goal in self.goal:
-                    if goal not in layer:
-                        allGoalsMet = False
-                if not allGoalsMet:
-                    break
-                goalsAreMutex = False
-                for goalA in self.goal:
-                    for goalB in self.goal:
-                        if layer.is_mutex(goalA, goalB) and goalA != goalB:
-                            goalsAreMutex = True
-                if goalsAreMutex == False:
-                    return i
-                else:
-                    self._extend()
-                    i += 1
-
+        last_layer = self.literal_layers[-1]
+        while True:
+            if self.goal.issubset(last_layer):
+                no_pair_mutex = True
+                for goal1 in self.goal:
+                    for goal2 in self.goal:
+                        if last_layer.is_mutex(goal1, goal2):
+                            no_pair_mutex = False
+                            break
+                if no_pair_mutex:
+                    return len(self.literal_layers)-1
+            if self._is_leveled:
+                break
+            self._extend()
+        return len(self.literal_layers)-1
 
     ##############################################################################
     #                     DO NOT MODIFY CODE BELOW THIS LINE                     #
