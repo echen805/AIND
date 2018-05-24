@@ -194,7 +194,21 @@ class PlanningGraph:
 
         heu_level_sum = 0
 
+        while True:
+            last_layer = self.literal_layers[-1]
+            # print("this is a goal: ", self.goal)
+            for literal in last_layer:
+                # print("this is a literal of the current layer: ", literal)
+                # print("current level sum is: ", heu_level_sum)
+                if literal in self.goal:
+                    heu_level_sum += len(last_layer)
 
+            if self._is_leveled:
+                break
+            self._extend()
+
+        # print("heu_level_sum: ", heu_level_sum)
+        return heu_level_sum
 
     def h_maxlevel(self):
         """ Calculate the max level heuristic for the planning graph
@@ -224,19 +238,34 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic with A*
         """
         # TODO: implement maxlevel heuristic
-        i = 0
-        level_costs = []
-        costs = []
-        while not self._is_leveled:
-            allGoalsMet = True
-            for literal in self.literal_layers[-1]: #literal_layers[-1] is the parent layer
-                if literal not in costs and literal in self.goal:
-                    costs.append(literal)
-                    level_costs.append(i)
-                    i += 1
-                self._extend()
-        return max(level_costs)
+        # i = 0
+        # level_costs = []
+        # costs = []
+        # while not self._is_leveled:
+        #     allGoalsMet = True
+        #     for literal in self.literal_layers[-1]: #literal_layers[-1] is the parent layer
+        #         if literal not in costs and literal in self.goal:
+        #             costs.append(literal)
+        #             level_costs.append(i)
+        #             i += 1
+        #         self._extend()
+        # return max(level_costs)
 
+        heu_level_max = []
+
+        while True:
+            last_layer = self.literal_layers[-1]
+            # print("this is a goal: ", self.goal)
+            for literal in last_layer:
+                # print("this is a literal of the current layer: ", literal)
+                if literal in self.goal:
+                    heu_level_max.append(len(last_layer))
+
+            if self._is_leveled:
+                break
+            self._extend()
+        # print("heu_level_max ",heu_level_max)
+        return max(heu_level_max)
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
@@ -260,8 +289,8 @@ class PlanningGraph:
         -----
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
-        last_layer = self.literal_layers[-1]
         while True:
+            last_layer = self.literal_layers[-1]
             if self.goal.issubset(last_layer):
                 no_pair_mutex = True
                 for goal1 in self.goal:
