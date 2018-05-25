@@ -1,4 +1,3 @@
-
 from itertools import chain, combinations
 from aimacode.planning import Action
 from aimacode.utils import expr
@@ -16,48 +15,44 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-
-        for effectA in actionA.effects:
-            for effectB in actionB.effects:
-                if effectA == ~effectB:
-                    return True
-        for effectB in actionB.effects:
-            for effectA in actionA.effects:
-                if effectB == ~effectA:
+        for actAItem in actionA.effects:
+            for actBItem in actionB.effects:
+                if actAItem == ~actBItem:
                     return True
         return False
 
-
     def _interference(self, actionA, actionB):
-        """ Return True if the effects of either action negate the preconditions of the other 
-        
+        """ Return True if the effects of either action negate the preconditions of the other
+
         See Also
         --------
         layers.ActionNode
         """
         # TODO: implement this function
-        for effectA in actionA.effects:
-            for precondB in actionB.preconditions:
-                if effectA == ~precondB:
+        for actAItem in actionA.effects:
+            for actBItem in actionB.preconditions:
+                if actAItem == ~actBItem:
                     return True
-        for effectB in actionB.effects:
-            for precondA in actionA.preconditions:
-                if effectB == ~precondA:
+
+        for actAItem in actionA.preconditions:
+            for actBItem in actionB.effects:
+                if actAItem == ~actBItem:
                     return True
+
         return False
 
     def _competing_needs(self, actionA, actionB):
         """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
-        
+
         See Also
         --------
         layers.ActionNode
         layers.BaseLayer.parent_layer
         """
         # TODO: implement this function
-        for precondA in actionA.preconditions:
-            for precondB in actionB.preconditions:
-                if self.parent_layer.is_mutex(precondA,precondB):
+        for actAItem in actionA.preconditions:
+            for actBItem in actionB.preconditions:
+                if self.parent_layer.is_mutex(actAItem, actBItem):
                     return True
         return False
 
@@ -71,23 +66,11 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
-        # Go through all the layers and collect all the literals for A and B
-        allLiteralA = []
-        allLiteralB = []
-        # print("items: ", self.parent_layer.children.items())
-        # print("literalA: {} and literalB: {}".format(literalA, literalB))
-        # Since the layers are a dictionary, need to split it up as key/value to better parse. A layer consist of a fluent and an action
-        for action, fluents in self.parent_layer.children.items():
-            # print("these are the fluents:", fluents)
-            # print("these are the actions:", action)
-            if literalA in fluents:
-                allLiteralA.append(action)
-            if literalB in fluents:
-                allLiteralB.append(action)
-        # print("allLiteralA:{} and allLiteralB:{}".format(allLiteralA, allLiteralB))
-        for litA in allLiteralA:
-            for litB in allLiteralB:
-                if not self.parent_layer.is_mutex(litA, litB):
+        # TODO: implement this function
+        for actionA, actionB in combinations(self.parent_layer, 2):
+            if not self.parent_layer.is_mutex(actionA, actionB):
+                if (literalA in actionA.effects and literalB in actionB.effects) or (
+                        literalA in actionB.effects and literalB in actionA.effects):
                     return False
         return True
 
@@ -123,7 +106,7 @@ class PlanningGraph:
         # make no-op actions that persist every literal to the next layer
         no_ops = [make_node(n, no_op=True) for n in chain(*(makeNoOp(s) for s in problem.state_map))]
         self._actionNodes = no_ops + [make_node(a) for a in problem.actions_list]
-        
+
         # initialize the planning graph by finding the literals that are in the
         # first layer and finding the actions they they should be connected to
         literals = [s if f else ~s for f, s in zip(state, problem.state_map)]
@@ -132,26 +115,20 @@ class PlanningGraph:
         self.literal_layers = [layer]
         self.action_layers = []
 
-    def LevelCost(self, graph, goal):
-        """ Calculates the cost of a level. The level cost of a goal is equal to the level number of the first literal layer in the planning graph where the goal literal appears.
-
-        :param graph: PlanningGraph
-        :param goal: PlanningProblem.goal
-        :return: a value corresponding to the cost of the level
-
-        function LevelCost(graph, goal) returns a value
-         inputs:
-          graph, a leveled planning graph
-          goal, a literal that is a goal in the planning graph
-
-         for each layeri in graph.literalLayers do
-          if goal in layeri then return i
-        """
-        cost = 0
-        for literalLayer in graph.literal_layer:
-            if goal in literalLayer:
-                return cost
-            cost += 1
+    def find_goal(self, goal_in):
+        # first look in existing layers incase already expanded
+        for i, literal_layer in enumerate(self.literal_layers):
+            for literal in literal_layer:
+                if literal == goal_in:
+                    return i
+        # cannot find in existing layers - expand and look
+        found_goal = False
+        while not found_goal and not self._is_leveled and len(self.literal_layers) < 1e6:
+            self._extend()
+            for literal in self.literal_layers[-1]:
+                if literal == goal_in:
+                    return len(self.literal_layers) - 1
+        raise Exception("Cannot find goal {}".format(goal_in))
 
     def h_levelsum(self):
         """ Calculate the level sum heuristic for the planning graph
@@ -161,53 +138,22 @@ class PlanningGraph:
         level at which the literal first appears in the planning graph. Note
         that the level cost is **NOT** the minimum number of actions to
         achieve a single goal literal.
-        
-        For example, if Goal_1 first appears in level 0 of the graph (i.e.,
-        it is satisfied at the root of the planning graph) and Goal_2 first
+
+        For example, if Goal1 first appears in level 0 of the graph (i.e.,
+        it is satisfied at the root of the planning graph) and Goal2 first
         appears in level 3, then the levelsum is 0 + 3 = 3.
 
-        Hints
-        -----
-          - See the pseudocode folder for help on a simple implementation
-          - You can implement this function more efficiently than the
-            sample pseudocode if you expand the graph one level at a time
-            and accumulate the level cost of each goal rather than filling
-            the whole graph at the start.
+        Hint: expand the graph one level at a time and accumulate the level
+        cost of each goal.
 
         See Also
         --------
         Russell-Norvig 10.3.1 (3rd Edition)
         """
         # TODO: implement this function
-        # i = 0
-        # level_costs = []
-        # costs = []
-        # while not self._is_leveled:
-        #     allGoalsMet = True
-        #     for literal in self.literal_layers[-1]:  # literal_layers[-1] is the parent layer
-        #         if literal not in costs and literal in self.goal:
-        #             costs.append(literal)
-        #             level_costs.append(i)
-        #             i += 1
-        #         self._extend()
-        # return sum(level_costs)
-
         heu_level_sum = 0
-
-        while True:
-            last_layer = self.literal_layers[-1]
-            # print("this is a goal: ", self.goal)
-            for literal in last_layer:
-                # print("this is a literal of the current layer: ", literal)
-                # print("current level sum is: ", heu_level_sum)
-                if literal in self.goal:
-                    heu_level_sum += len(last_layer)
-
-            if self._is_leveled:
-                break
-            self._extend()
-
-        # print("heu_level_sum: ", heu_level_sum)
+        for g in self.goal:  # foreach goal
+            heu_level_sum += self.find_goal(g)
         return heu_level_sum
 
     def h_maxlevel(self):
@@ -222,12 +168,7 @@ class PlanningGraph:
         For example, if Goal1 first appears in level 1 of the graph and
         Goal2 first appears in level 3, then the levelsum is max(1, 3) = 3.
 
-        Hints
-        -----
-          - See the pseudocode folder for help on a simple implementation
-          - You can implement this function more efficiently if you expand
-            the graph one level at a time until the last goal is met rather
-            than filling the whole graph at the start.
+        Hint: expand the graph one level at a time until all goals are met.
 
         See Also
         --------
@@ -238,34 +179,10 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic with A*
         """
         # TODO: implement maxlevel heuristic
-        # i = 0
-        # level_costs = []
-        # costs = []
-        # while not self._is_leveled:
-        #     allGoalsMet = True
-        #     for literal in self.literal_layers[-1]: #literal_layers[-1] is the parent layer
-        #         if literal not in costs and literal in self.goal:
-        #             costs.append(literal)
-        #             level_costs.append(i)
-        #             i += 1
-        #         self._extend()
-        # return max(level_costs)
-
-        heu_level_max = []
-
-        while True:
-            last_layer = self.literal_layers[-1]
-            # print("this is a goal: ", self.goal)
-            for literal in last_layer:
-                # print("this is a literal of the current layer: ", literal)
-                if literal in self.goal:
-                    heu_level_max.append(len(last_layer))
-
-            if self._is_leveled:
-                break
-            self._extend()
-        # print("heu_level_max ",heu_level_max)
-        return max(heu_level_max)
+        heu_max_level = 0
+        for g in self.goal:  # foreach goal
+            heu_max_level = max(heu_max_level, self.find_goal(g))
+        return heu_max_level
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
@@ -274,12 +191,7 @@ class PlanningGraph:
         appear such that no pair of goal literals are mutex in the last
         layer of the planning graph.
 
-        Hints
-        -----
-          - See the pseudocode folder for help on a simple implementation
-          - You can implement this function more efficiently if you expand
-            the graph one level at a time until you find the set level rather
-            than filling the whole graph at the start.
+        Hint: expand the graph one level at a time until you find the set level
 
         See Also
         --------
@@ -289,6 +201,7 @@ class PlanningGraph:
         -----
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
+        # TODO: implement setlevel heuristic
         while True:
             last_layer = self.literal_layers[-1]
             if self.goal.issubset(last_layer):
@@ -336,7 +249,7 @@ class PlanningGraph:
         negative literals in the leaf nodes of the parent literal level.
 
         The new literal layer contains all literals that could result from taking each possible
-        action in the NEW action layer. 
+        action in the NEW action layer.
         """
         if self._is_leveled: return
 
