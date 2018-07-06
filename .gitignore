@@ -1,3 +1,21 @@
 __pycache__/
 .ipynb_checkpoints
 .xml
+
+*.json
+
+Projects/3_Adversarial Search/\.idea/
+
+*.bz2
+
+*.pyd
+
+Bayesian_Inference/venv/Scripts/
+
+*.iml
+
+Bayesian_Inference/venv/Lib/site-packages/
+
+Bayesian_Inference/venv/
+
+*.xml
