@@ -46,7 +46,7 @@ class CustomPlayer(DataPlayer):
         if state.ply_count < 2:
             self.queue.put(random.choice(state.actions()))
         else:
-            for i in range(1, 25):
+            for i in range(1, 50):
                 self.queue.put(self.alpha_beta_search(state, depth=i))
 
     def alpha_beta_search(self, state, depth):
@@ -56,37 +56,38 @@ class CustomPlayer(DataPlayer):
         the searching player.
         """
 
-        def min_value(state, depth, alpha, beta):
-            """ Return the value for a win (+1) if the game is over,
-            otherwise return the minimum value over all legal child
-            nodes.
-            """
-            if state.terminal_test(): return state.utility(self.player_id)
-            if depth <= 0: return self.score(state)
-            value = float("inf")
-            for action in state.actions():
-                value = min(value, max_value(state.result(action), depth, alpha, beta))
-                if value <= alpha:
-                    return value
-                beta = min(beta, value)
-            return value
+        return max(state.actions(), key=lambda x: self.min_value(state.result(x), depth - 1, float("-inf"), float("inf")))
+    def min_value(self,state, depth, alpha, beta):
+        """ Return the value for a win (+1) if the game is over,
+        otherwise return the minimum value over all legal child
+        nodes.
+        """
+        if state.terminal_test(): return state.utility(self.player_id)
+        if depth <= 0: return self.offense_score(state)
+        value = float("inf")
+        for action in state.actions():
+            value = min(value, self.max_value(state.result(action), depth, alpha, beta))
+            if value <= alpha:
+                return value
+            beta = min(beta, value)
+        return value
 
-        def max_value(state, depth, alpha, beta):
-            """ Return the value for a loss (-1) if the game is over,
-            otherwise return the maximum value over all legal child
-            nodes.
-            """
-            if state.terminal_test(): return state.utility(self.player_id)
-            if depth <= 0: return self.score(state)
-            value = float("-inf")
-            for action in state.actions():
-                value = max(value, min_value(state.result(action), depth, alpha, beta))
-                if value >= beta:
-                    return value
-                alpha = max(alpha, value)
-            return value
+    def max_value(self,state, depth, alpha, beta):
+        """ Return the value for a loss (-1) if the game is over,
+        otherwise return the maximum value over all legal child
+        nodes.
+        """
+        if state.terminal_test(): return state.utility(self.player_id)
+        if depth <= 0: return self.offense_score(state)
+        value = float("-inf")
+        for action in state.actions():
+            value = max(value, self.min_value(state.result(action), depth, alpha, beta))
+            if value >= beta:
+                return value
+            alpha = max(alpha, value)
+        return value
 
-        return max(state.actions(), key=lambda x: min_value(state.result(x), depth - 1, float("-inf"), float("inf")))
+
 
     def minimax(self, state, depth):
 
@@ -115,7 +116,17 @@ class CustomPlayer(DataPlayer):
         opp_liberties = state.liberties(opp_loc)
         return len(own_liberties) - len(opp_liberties)
 
-
-
-
-
+    def offense_score(self, state):
+        score = self.score(state)
+        own_loc = state.locs[self.player_id]
+        opp_loc = state.locs[1 - self.player_id]
+        own_liberties = state.liberties(own_loc)
+        opp_liberties = state.liberties(opp_loc)
+        overlap = [x for x in own_liberties if x in opp_liberties]
+        if self.player_id == 0:
+            if len(overlap) > 0:
+                score += 1
+        else:
+            if len(overlap) > 0:
+                score -= 1
+        return score

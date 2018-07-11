@@ -10,6 +10,10 @@ class ActionLayer(BaseActionLayer):
     def _inconsistent_effects(self, actionA, actionB):
         """ Return True if an effect of one action negates an effect of the other
 
+        Hints:
+            (1) `~Literal` can be used to logically negate a literal
+            (2) `self.children` contains a map from actions to effects
+
         See Also
         --------
         layers.ActionNode
@@ -61,6 +65,10 @@ class LiteralLayer(BaseLiteralLayer):
 
     def _inconsistent_support(self, literalA, literalB):
         """ Return True if all ways to achieve both literals are pairwise mutex in the parent layer
+
+        Hints:
+            (1) `self.parent_layer` contains a reference to the previous action layer
+            (2) `self.parents` contains a map from literals to actions in the parent layer
 
         See Also
         --------
